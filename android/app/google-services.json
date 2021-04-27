@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "949710592240",
+    "project_id": "taches-cbd4c",
+    "storage_bucket": "taches-cbd4c.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:949710592240:android:e00fb49ff92ed4e20b0a35",
+        "android_client_info": {
+          "package_name": "com.hasitiana.taches"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "949710592240-59us54bsj5fdogp9cf8quuu1ukimc00r.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBiJpJL5HP45__EKwn0sGS_LtRbQCWsuxo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "949710592240-59us54bsj5fdogp9cf8quuu1ukimc00r.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
