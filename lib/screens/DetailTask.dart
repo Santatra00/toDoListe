@@ -3,14 +3,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:taches/Components/MyTextFormField.dart';
 
-class AddTaskPage extends StatefulWidget {
-  AddTaskPage({Key key}) : super(key: key);
+class DetailTaskPage extends StatefulWidget {
+  DetailTaskPage({Key key, String idTask}) : super(key: key);
+  String idTask;
 
   @override
-  _AddTaskPageState createState() => _AddTaskPageState();
+  _DetailTaskPageState createState() => _DetailTaskPageState();
 }
 
-class _AddTaskPageState extends State<AddTaskPage> {
+class _DetailTaskPageState extends State<DetailTaskPage> {
   String _description;
   String _categorie;
   var _categories = ["Etude", "Livre", "Boulot"];
@@ -23,8 +24,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final auth = FirebaseAuth.instance;
 
   _submit(context){
-    print("_submit");
-
     if((_categorie!=null)&&(_description!=null)&&(_formController.currentState!=null)&&(_formController.currentState.validate())){
       _formController.currentState.save();
       CollectionReference taches = FirebaseFirestore.instance.collection('taches');
@@ -64,7 +63,7 @@ class _AddTaskPageState extends State<AddTaskPage> {
                       ),
                       SizedBox(height: 20.0,),
                       Text(
-                          "Nouvelle tache",
+                          "Tache:",
                           style: TextStyle(
                               color: Colors.black,
                               fontSize: 40.0,

@@ -13,8 +13,11 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final firestore = FirebaseFirestore.instance;
-  final DateFormat _dateFormat = DateFormat("dd MMM yyyy");
+  final DateFormat _dateFormat = DateFormat("dd MMM yyyy * hh:mm:ss");
 
+//  filtre by categorie
+//  details tache
+//  mampitandrina izay vao mandefa valiny
 
   @override
   Widget build(BuildContext context) {
@@ -55,9 +58,10 @@ class _MyHomePageState extends State<MyHomePage> {
             ];
 //          creation de la liste des taches
             snapshots.data.docs.forEach((data){
+              print(data);
               listWidgetTache.add(
                 MyListTile(
-                  title: data["description"],
+                  title: (data["description"] == null)?"[Empty]":data["description"],
                   subtitle: _dateFormat.format(
                     DateTime.fromMillisecondsSinceEpoch(
                       int.parse(

@@ -18,6 +18,16 @@ class _MyListTileState extends State<MyListTile> {
   _MyListTileState({
     String labelText, TextEditingController descriptionController, Function onChanged});
 
+  cutText(String text){
+    String textResult = "";
+    if(text.length>20){
+      textResult = text.substring(0, 20) + "...";
+    }
+
+    textResult.replaceAll(r"\n" , "");
+    return textResult;
+  }
+
   @override
   Widget build(BuildContext context){
     return Padding(
@@ -26,7 +36,7 @@ class _MyListTileState extends State<MyListTile> {
           children: [
             ListTile(
               title: Text(
-                widget.title,
+                cutText(widget.title),
                 style: TextStyle(
                     fontWeight: FontWeight.bold
                 ),
@@ -40,8 +50,8 @@ class _MyListTileState extends State<MyListTile> {
                     firestore
                         .doc(widget.user.id)
                         .update({'is_finished': true})
-                        .then((value) => print("User Deleted"))
-                            .catchError((error) => print("Failed to delete user: $error"));
+                        .then((value) => print("It's checked"))
+                            .catchError((error) => print("Failed to check user: $error"));
                       },
                   activeColor: Theme.of(context).primaryColor,
                   value: widget.user["is_finished"],

@@ -11,12 +11,13 @@ void main() async{
   WidgetsFlutterBinding.ensureInitialized();
 
   await Firebase.initializeApp();
-  FirebaseFirestore.instance.settings =Settings(persistenceEnabled: true);
+  FirebaseFirestore.instance.settings = Settings(persistenceEnabled: true);
 
   runApp(App());
 }
 
 class App extends StatelessWidget {
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -30,7 +31,6 @@ class App extends StatelessWidget {
       routes: {
         '/': (context)=>LoginPage(),
         '/inscription': (context)=>SignInPage(),
-
         '/home': (context) => MyHomePage(),
         '/addTask': (context) => AddTaskPage(),
       },
