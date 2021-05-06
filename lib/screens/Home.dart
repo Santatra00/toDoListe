@@ -19,18 +19,49 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final DateFormat _dateFormat = DateFormat("dd MMM yyyy * hh:mm:ss");
 
+  final List<String> filters = ["Tous", "Accompli", "non Accompli"];
 //  filtre by categorie
 //  details tache
 
+  String filter;
+  String tempFilter;
+  DateTime dateFilter;
+  DateTime selectedDate = DateTime.now();
+  final DateFormat _dateFormatFilter = DateFormat("dd MMM yyyy");
+  final DateFormat _dateFormatQuery = DateFormat("yyyy-MM-dd");
+
+  bool isDateFilterActive;
+
+  var db;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    filter = "Tous";
+    isDateFilterActive = false;
+    dateFilter = DateTime.now();
+  }
+
   @override
   Widget build(BuildContext context) {
+    db = firestore.collection("taches").where("id_user",isEqualTo:auth.currentUser.uid);
+    if(filter !=  "Tous"){
+      db= db.where("is_finished",isEqualTo:(filter == "Accompli"));
+    }
+    if(dateFilter != null){
+      DateTime tempDateTime = DateTime.parse(_dateFormatQuery.format(dateFilter) + " 00:00:00");
+      db = db.where("created_at",
+          isLessThanOrEqualTo: tempDateTime.add(Duration(days: 1)),
+          isGreaterThanOrEqualTo: tempDateTime);
+
+
+      print("${tempDateTime.millisecondsSinceEpoch} ${dateFilter.millisecondsSinceEpoch}");
+    }
     return Scaffold(
       body: StreamBuilder(
-        stream: firestore.collection("taches").where("id_user",isEqualTo:auth.currentUser.uid).snapshots(),
+        stream: db.snapshots(),
         builder: (context, snapshots){
-          if((!snapshots.hasData)||(snapshots.data.docs.length==0)){
-            return Text("Liste vide");
-          }else{
+
 //            entete
             List<Widget> listWidgetTache=[
               Padding(
@@ -58,10 +89,78 @@ class _MyHomePageState extends State<MyHomePage> {
                                     builder: (BuildContext context){
                                       return MyDialogue(
                                         title: "Filtrer les taches",
-                                        subtitle: "Votre mot de pass ne correspond pas a aucun mot de pass ",
+                                          action:FlatButton(
+                                              child: Text("Filtrer"),
+                                              onPressed: (){
+                                                setState(() {
+                                                  filter = tempFilter;
+                                                });
+                                                Navigator.pop(context, true);
+                                              }
+                                          ),
+                                        content: DropdownButtonFormField(
+                                          icon: Icon(Icons.arrow_drop_down_circle),
+                                          iconSize: 22.0,
+                                          iconEnabledColor: Theme.of(context).primaryColor,
+                                          items: filters.map((value){
+                                            return DropdownMenuItem(
+                                                value: value,
+                                                child: Text(
+                                                    value,
+                                                    style: TextStyle(
+                                                        color: Colors.black87,
+                                                        fontSize: 18.0
+                                                    )
+                                                )
+                                            );
+                                          }).toList(),
+                                          style:TextStyle(fontSize: 18.0),
+                                          decoration: InputDecoration(
+                                              labelText: 'Filtre',
+                                              labelStyle: TextStyle(fontSize: 18.0),
+                                              border: OutlineInputBorder(
+                                                  borderRadius: BorderRadius.circular(10.0)
+                                              )
+                                          ),
+                                          validator: (input)=>((input==null)||(input.trim().isEmpty))?'Please enter a task':null,
+                                          onSaved: (input)=>input,
+                                          onChanged: (value){
+                                          setState(() {
+                                            tempFilter=value;
+                                          });
+                                          },
+                                        ),
                                       );
                                     }
                                 ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.calendar_today),
+                                onPressed: (){
+                                  print("Pressed-1");
+                                  if(!isDateFilterActive){
+                                    print("Pressed-2");
+                                    showDatePicker(
+                                      context: context,
+                                      initialDate: DateTime.now(),
+                                      firstDate: DateTime(2020),
+                                      lastDate: DateTime(2050),
+                                    ).then((picked){
+                                      print("Pressed-3");
+                                      if((picked != null) && (picked != selectedDate)){
+                                        setState(() {
+                                          dateFilter = picked;
+                                        });
+                                      }
+                                    });
+                                  }else{
+                                    dateFilter = null;
+                                  }
+                                  print(isDateFilterActive);
+                                  setState(() {
+                                    isDateFilterActive = !isDateFilterActive;
+                                  });
+                                },
                               ),
                               IconButton(
                                 icon: Icon(Icons.exit_to_app),
@@ -74,8 +173,12 @@ class _MyHomePageState extends State<MyHomePage> {
                       ),
 
                       SizedBox(height: 10.0),
-                      Text(
-                        "${(snapshots.hasData)?snapshots.data.docs.length:0.toString()} Tache(s)",
+
+                        Text(
+                        "${(snapshots.hasData)?snapshots.data.docs.length:0.toString()} "
+                            "Tache${(snapshots.hasData &&(snapshots.data.docs.length>1))?"s":""} "
+                            "${(isDateFilterActive)?" du ${_dateFormatFilter.format(dateFilter)}":""}"
+                        ,
                         style: TextStyle(
                             color: Colors.grey,
                             fontSize: 18.0,
@@ -87,6 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ];
 //          creation de la liste des taches
+            ((!snapshots.hasData)||(snapshots.data.docs.length==0))?
+            Text("Liste vide"):
             snapshots.data.docs.forEach((data){
               print(data["description"] );
               listWidgetTache.add(
@@ -107,7 +212,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 children: listWidgetTache
             );
           }
-        }
+
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: (){
