@@ -1,6 +1,8 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:taches/Components/MyDialogue.dart';
 import 'package:taches/Components/MyListTile.dart';
 import 'package:taches/security.dart';
 
@@ -13,17 +15,18 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final firestore = FirebaseFirestore.instance;
+  final auth = FirebaseAuth.instance;
+
   final DateFormat _dateFormat = DateFormat("dd MMM yyyy * hh:mm:ss");
 
 //  filtre by categorie
 //  details tache
-//  mampitandrina izay vao mandefa valiny
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: StreamBuilder(
-        stream: firestore.collection("taches").snapshots(),
+        stream: firestore.collection("taches").where("id_user",isEqualTo:auth.currentUser.uid).snapshots(),
         builder: (context, snapshots){
           if((!snapshots.hasData)||(snapshots.data.docs.length==0)){
             return Text("Liste vide");
@@ -35,14 +38,41 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: <Widget>[
-                      Text(
-                          "Taches",
-                          style: TextStyle(
-                              color: Colors.black,
-                              fontSize: 40.0,
-                              fontWeight: FontWeight.bold
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                              "Taches",
+                              style: TextStyle(
+                                  color: Colors.black,
+                                  fontSize: 40.0,
+                                  fontWeight: FontWeight.bold
+                              )
+                          ),
+                          Row(
+                            children: [
+                              IconButton(
+                                icon: Icon(Icons.filter_list),
+                                onPressed: ()=>showDialog(
+                                    context: context,
+                                    builder: (BuildContext context){
+                                      return MyDialogue(
+                                        title: "Filtrer les taches",
+                                        subtitle: "Votre mot de pass ne correspond pas a aucun mot de pass ",
+                                      );
+                                    }
+                                ),
+                              ),
+                              IconButton(
+                                icon: Icon(Icons.exit_to_app),
+                                onPressed: ()=>auth.signOut(),
+                              )
+                            ],
                           )
+
+                        ],
                       ),
+
                       SizedBox(height: 10.0),
                       Text(
                         "${(snapshots.hasData)?snapshots.data.docs.length:0.toString()} Tache(s)",
@@ -58,7 +88,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ];
 //          creation de la liste des taches
             snapshots.data.docs.forEach((data){
-              print(data);
+              print(data["description"] );
               listWidgetTache.add(
                 MyListTile(
                   title: (data["description"] == null)?"[Empty]":data["description"],

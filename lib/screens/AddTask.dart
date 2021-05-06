@@ -23,10 +23,12 @@ class _AddTaskPageState extends State<AddTaskPage> {
   final auth = FirebaseAuth.instance;
 
   _submit(context){
-    print("_submit");
+    print("_submit, $_categorie, $_description");
 
-    if((_categorie!=null)&&(_description!=null)&&(_formController.currentState!=null)&&(_formController.currentState.validate())){
+    if((_categorie!=null)&&(_formController.currentState!=null)&&(_formController.currentState.validate())){
       _formController.currentState.save();
+      print("_submit, $_categorie, $_description");
+
       CollectionReference taches = FirebaseFirestore.instance.collection('taches');
       print('$_categorie, $_description');
       taches.add({
@@ -52,7 +54,6 @@ class _AddTaskPageState extends State<AddTaskPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
                       Container(
-                        color: Colors.blue,
                         child:  GestureDetector(
                           onTap: ()=>Navigator.pop(context),
                           child: Icon(
@@ -80,9 +81,10 @@ class _AddTaskPageState extends State<AddTaskPage> {
                                 labelText: "Description",
                                 msgOnEmpty: "Veuillez indiquer la description de la tache",
                                 onSaved: (input){
+                                  print("saved");
                                     _description=input;
-                                }
-                              ),
+                                },
+                            ),
                             Padding(
                                   padding: EdgeInsets.symmetric(vertical: 20.0),
                                   child: DropdownButtonFormField(
@@ -122,24 +124,27 @@ class _AddTaskPageState extends State<AddTaskPage> {
                           ],
                         )
                     ),
-                    Container(
-                      margin: EdgeInsets.symmetric(vertical: 20.0),
-                      height: 60.0,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).primaryColor,
-                        borderRadius: BorderRadius.circular(30.0),
-                      ),
-                      child: FlatButton(
-                        onPressed: _submit(context),
-                        child: Text(
-                          "Enregistrer",
-                          style: TextStyle(
-                            color: Colors.white70,
-                            fontSize: 20.0
-                          ),
+                    GestureDetector(
+                      onTap: ()=> _submit(context),
+                      child: Container(
+                        margin: EdgeInsets.symmetric(vertical: 20.0),
+                        height: 60.0,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Theme.of(context).primaryColor,
+                          borderRadius: BorderRadius.circular(30.0),
                         ),
-                      ),
+                        child: Center(
+                          child: Text(
+                              "Enregistrer",
+                              style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 20.0
+                              ),
+                            ),
+                        ),
+
+                          )
                     )
                   ],
                 )

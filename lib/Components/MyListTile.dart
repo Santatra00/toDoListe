@@ -19,12 +19,14 @@ class _MyListTileState extends State<MyListTile> {
     String labelText, TextEditingController descriptionController, Function onChanged});
 
   cutText(String text){
-    String textResult = "";
-    if(text.length>20){
-      textResult = text.substring(0, 20) + "...";
+    String textResult = text;
+    if(text.length>40){
+      textResult = text.substring(0, 40) + "...";
     }
-
-    textResult.replaceAll(r"\n" , "");
+    if(textResult.split("\n").length>1){
+      textResult = textResult.split("\n")[0];
+      textResult+="...";
+    }
     return textResult;
   }
 
