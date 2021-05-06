@@ -22,7 +22,7 @@ class _MyHomePageState extends State<MyHomePage> {
   final List<String> filters = ["Tous", "Accompli", "non Accompli"];
 //  filtre by categorie
 //  details tache
-
+  bool isConnected;
   String filter;
   String tempFilter;
   DateTime dateFilter;
@@ -40,22 +40,46 @@ class _MyHomePageState extends State<MyHomePage> {
     filter = "Tous";
     isDateFilterActive = false;
     dateFilter = DateTime.now();
+    isConnected = true;
+    auth.authStateChanges()
+        .listen((User user) {
+      if (user == null) {
+        Navigator.popAndPushNamed(context, '/');
+      }
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    db = firestore.collection("taches").where("id_user",isEqualTo:auth.currentUser.uid);
-    if(filter !=  "Tous"){
-      db= db.where("is_finished",isEqualTo:(filter == "Accompli"));
+
+    if(auth.currentUser == null){
+      return Scaffold(
+          body:Center(
+        child: Text("Loading"),
+      ));
     }
+
+
+    db = firestore.collection("taches").where("id_user",isEqualTo:auth.currentUser.uid);
+
     if(dateFilter != null){
       DateTime tempDateTime = DateTime.parse(_dateFormatQuery.format(dateFilter) + " 00:00:00");
-      db = db.where("created_at",
-          isLessThanOrEqualTo: tempDateTime.add(Duration(days: 1)),
-          isGreaterThanOrEqualTo: tempDateTime);
-
-
+      if(filter !=  "Tous"){
+        db= db.where("is_finished",isEqualTo:(filter == "Accompli"))
+              .where("created_at",
+                isLessThanOrEqualTo: tempDateTime.add(Duration(days: 1)),
+                isGreaterThanOrEqualTo: tempDateTime);
+        print("Filter: $filter");
+      }else{
+        db = db.where("created_at",
+            isLessThanOrEqualTo: tempDateTime.add(Duration(days: 1)),
+            isGreaterThanOrEqualTo: tempDateTime);
+      }
       print("${tempDateTime.millisecondsSinceEpoch} ${dateFilter.millisecondsSinceEpoch}");
+    }else{
+      if(filter !=  "Tous") {
+        db = db.where("is_finished", isEqualTo: (filter == "Accompli"));
+      }
     }
     return Scaffold(
       body: StreamBuilder(
@@ -136,11 +160,11 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               IconButton(
                                 icon: Icon(Icons.calendar_today),
-                                onPressed: (){
+                                onPressed: ()async{
                                   print("Pressed-1");
                                   if(!isDateFilterActive){
                                     print("Pressed-2");
-                                    showDatePicker(
+                                    await showDatePicker(
                                       context: context,
                                       initialDate: DateTime.now(),
                                       firstDate: DateTime(2020),
@@ -160,11 +184,17 @@ class _MyHomePageState extends State<MyHomePage> {
                                   setState(() {
                                     isDateFilterActive = !isDateFilterActive;
                                   });
+
                                 },
                               ),
                               IconButton(
                                 icon: Icon(Icons.exit_to_app),
-                                onPressed: ()=>auth.signOut(),
+                                onPressed: ()async{
+                                  await auth.signOut();
+                                  setState((){
+                                    isConnected = false;
+                                  });
+                                },
                               )
                             ],
                           )
@@ -177,6 +207,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         Text(
                         "${(snapshots.hasData)?snapshots.data.docs.length:0.toString()} "
                             "Tache${(snapshots.hasData &&(snapshots.data.docs.length>1))?"s":""} "
+                            "${filter=="Tous"?"":filter}"
                             "${(isDateFilterActive)?" du ${_dateFormatFilter.format(dateFilter)}":""}"
                         ,
                         style: TextStyle(
@@ -193,10 +224,19 @@ class _MyHomePageState extends State<MyHomePage> {
             ((!snapshots.hasData)||(snapshots.data.docs.length==0))?
             Text("Liste vide"):
             snapshots.data.docs.forEach((data){
-              print(data["description"] );
               listWidgetTache.add(
                 MyListTile(
+                  key: Key(data.id),
+                  onDismissed : (DismissDirection direction){
+                    firestore
+                        .doc(data.id)
+                        .delete()
+                        .then((value) => print("It's deleted"))
+                        .catchError((error) => print("Failed to delete : $error"));
+
+                  },
                   title: (data["description"] == null)?"[Empty]":data["description"],
+                  categorie: data["categorie"],
                   subtitle: _dateFormat.format(
                     DateTime.fromMillisecondsSinceEpoch(
                       int.parse(

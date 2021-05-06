@@ -77,7 +77,7 @@ class _SignInPageState extends State<SignInPage> {
             builder: (BuildContext context){
               return MyDialogue(
                 title: "Inscription effectuer",
-                subtitle: "Veuiller vous connecter maintenant",
+                subtitle: "Connection effectuer",
               );
             }
         );
@@ -97,7 +97,7 @@ class _SignInPageState extends State<SignInPage> {
               context: context,
               builder: (BuildContext context){
                 return MyDialogue(
-                  title: "Cette email exite deja",
+                  title: "Cette email existe deja",
                   subtitle: "Cette adresse email est deja dans notre base de donnees",
                 );
               }

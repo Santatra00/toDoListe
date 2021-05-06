@@ -1,12 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:taches/screens/DetailTask.dart';
 
 class MyListTile extends StatefulWidget {
-  MyListTile({Key key, this.title, this.subtitle, this.onSaved, this.user}): super(key: key);
+  MyListTile({
+    Key key,
+    this.title,
+    this.subtitle,
+    this.onSaved,
+    this.user,
+    this.categorie,
+    this.onDismissed}): super(key: key);
 
   final String title;
   final String subtitle;
+  final String categorie;
 
+  final Function onDismissed;
   final Function onSaved;
   final QueryDocumentSnapshot user;
 
@@ -32,11 +42,24 @@ class _MyListTileState extends State<MyListTile> {
 
   @override
   Widget build(BuildContext context){
-    return Padding(
+    return Dismissible(
+      key: widget.key,
+      background: Container(
+        color: Theme.of(context).primaryColor,
+      ),
+        onDismissed: widget.onDismissed,
+        child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 25.0),
         child: Column(
           children: [
             ListTile(
+              onTap: ()=>Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DetailTaskPage(
+                  description: widget.title,
+                  categorie: widget.categorie,
+                )),
+              ),
               title: Text(
                 cutText(widget.title),
                 style: TextStyle(
@@ -57,12 +80,12 @@ class _MyListTileState extends State<MyListTile> {
                       },
                   activeColor: Theme.of(context).primaryColor,
                   value: widget.user["is_finished"],
-
               ),
             ),
             Divider()
           ],
         )
+    )
     );
   }
 

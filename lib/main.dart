@@ -9,10 +9,10 @@ import 'package:taches/screens/SignIn.dart';
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-
   await Firebase.initializeApp();
-  FirebaseFirestore.instance.settings = Settings(persistenceEnabled: true);
 
+  // Offline storage
+  FirebaseFirestore.instance.settings = Settings(persistenceEnabled: true);
   runApp(App());
 }
 
