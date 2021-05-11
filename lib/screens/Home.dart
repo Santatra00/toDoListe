@@ -4,7 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:taches/Components/MyDialogue.dart';
 import 'package:taches/Components/MyListTile.dart';
+import 'package:taches/Components/PageTitle.dart';
 import 'package:taches/security.dart';
+import 'package:taches/services/TacheService.dart';
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key}) : super(key: key);
@@ -32,7 +34,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   bool isDateFilterActive;
 
-  var db;
+  TacheService tacheService = new TacheService();
+
+  var queryTaches ;
+
+  String _subtitle;
   @override
   void initState() {
     // TODO: implement initState
@@ -47,6 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
         Navigator.popAndPushNamed(context, '/');
       }
     });
+    _subtitle = "0 Tache";
   }
 
   @override
@@ -55,205 +62,184 @@ class _MyHomePageState extends State<MyHomePage> {
     if(auth.currentUser == null){
       return Scaffold(
           body:Center(
-        child: Text("Loading"),
-      ));
+            child: Text("Loading"),
+          ));
     }
 
-
-    db = firestore.collection("taches").where("id_user",isEqualTo:auth.currentUser.uid);
-
+    // creating tache
+    queryTaches = tacheService.getCollectionReferenceTache();
+    queryTaches = tacheService.getQueryForAllTachesByUserId(queryTaches);
+    if(filter !=  "Tous") {
+      queryTaches = tacheService.getQueryIsFinished(queryTaches, (filter == "Accompli"));
+    }
     if(dateFilter != null){
       DateTime tempDateTime = DateTime.parse(_dateFormatQuery.format(dateFilter) + " 00:00:00");
-      if(filter !=  "Tous"){
-        db= db.where("is_finished",isEqualTo:(filter == "Accompli"))
-              .where("created_at",
-                isLessThanOrEqualTo: tempDateTime.add(Duration(days: 1)),
-                isGreaterThanOrEqualTo: tempDateTime);
-        print("Filter: $filter");
-      }else{
-        db = db.where("created_at",
-            isLessThanOrEqualTo: tempDateTime.add(Duration(days: 1)),
-            isGreaterThanOrEqualTo: tempDateTime);
-      }
-      print("${tempDateTime.millisecondsSinceEpoch} ${dateFilter.millisecondsSinceEpoch}");
-    }else{
-      if(filter !=  "Tous") {
-        db = db.where("is_finished", isEqualTo: (filter == "Accompli"));
-      }
+      queryTaches = tacheService.getQueryForTacheCreatedInDay(queryTaches, tempDateTime);
     }
+
     return Scaffold(
-      body: StreamBuilder(
-        stream: db.snapshots(),
-        builder: (context, snapshots){
-
-//            entete
-            List<Widget> listWidgetTache=[
-              Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: <Widget>[
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                              "Taches",
-                              style: TextStyle(
-                                  color: Colors.black,
-                                  fontSize: 40.0,
-                                  fontWeight: FontWeight.bold
-                              )
-                          ),
-                          Row(
-                            children: [
-                              IconButton(
-                                icon: Icon(Icons.filter_list),
-                                onPressed: ()=>showDialog(
-                                    context: context,
-                                    builder: (BuildContext context){
-                                      return MyDialogue(
-                                        title: "Filtrer les taches",
-                                          action:FlatButton(
-                                              child: Text("Filtrer"),
-                                              onPressed: (){
-                                                setState(() {
-                                                  filter = tempFilter;
-                                                });
-                                                Navigator.pop(context, true);
-                                              }
-                                          ),
-                                        content: DropdownButtonFormField(
-                                          icon: Icon(Icons.arrow_drop_down_circle),
-                                          iconSize: 22.0,
-                                          iconEnabledColor: Theme.of(context).primaryColor,
-                                          items: filters.map((value){
-                                            return DropdownMenuItem(
-                                                value: value,
-                                                child: Text(
-                                                    value,
-                                                    style: TextStyle(
-                                                        color: Colors.black87,
-                                                        fontSize: 18.0
-                                                    )
-                                                )
-                                            );
-                                          }).toList(),
-                                          style:TextStyle(fontSize: 18.0),
-                                          decoration: InputDecoration(
-                                              labelText: 'Filtre',
-                                              labelStyle: TextStyle(fontSize: 18.0),
-                                              border: OutlineInputBorder(
-                                                  borderRadius: BorderRadius.circular(10.0)
-                                              )
-                                          ),
-                                          validator: (input)=>((input==null)||(input.trim().isEmpty))?'Please enter a task':null,
-                                          onSaved: (input)=>input,
-                                          onChanged: (value){
-                                          setState(() {
-                                            tempFilter=value;
-                                          });
-                                          },
-                                        ),
-                                      );
-                                    }
-                                ),
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.calendar_today),
-                                onPressed: ()async{
-                                  print("Pressed-1");
-                                  if(!isDateFilterActive){
-                                    print("Pressed-2");
-                                    await showDatePicker(
-                                      context: context,
-                                      initialDate: DateTime.now(),
-                                      firstDate: DateTime(2020),
-                                      lastDate: DateTime(2050),
-                                    ).then((picked){
-                                      print("Pressed-3");
-                                      if((picked != null) && (picked != selectedDate)){
-                                        setState(() {
-                                          dateFilter = picked;
-                                        });
-                                      }
-                                    });
-                                  }else{
-                                    dateFilter = null;
-                                  }
-                                  print(isDateFilterActive);
-                                  setState(() {
-                                    isDateFilterActive = !isDateFilterActive;
-                                  });
-
-                                },
-                              ),
-                              IconButton(
-                                icon: Icon(Icons.exit_to_app),
-                                onPressed: ()async{
-                                  await auth.signOut();
-                                  setState((){
-                                    isConnected = false;
-                                  });
-                                },
-                              )
-                            ],
-                          )
-
-                        ],
-                      ),
-
-                      SizedBox(height: 10.0),
-
-                        Text(
-                        "${(snapshots.hasData)?snapshots.data.docs.length:0.toString()} "
-                            "Tache${(snapshots.hasData &&(snapshots.data.docs.length>1))?"s":""} "
-                            "${filter=="Tous"?"":filter}"
-                            "${(isDateFilterActive)?" du ${_dateFormatFilter.format(dateFilter)}":""}"
-                        ,
-                        style: TextStyle(
-                            color: Colors.grey,
-                            fontSize: 18.0,
-                            fontWeight: FontWeight.w600
-                        ),
-                      )
-                    ],
-                  )
+      body:
+        Column(
+            children:[
+              SizedBox(
+                height: 40.0,
               ),
-            ];
-//          creation de la liste des taches
-            ((!snapshots.hasData)||(snapshots.data.docs.length==0))?
-            Text("Liste vide"):
-            snapshots.data.docs.forEach((data){
-              listWidgetTache.add(
-                MyListTile(
-                  key: Key(data.id),
-                  onDismissed : (DismissDirection direction){
-                    firestore
-                        .doc(data.id)
-                        .delete()
-                        .then((value) => print("It's deleted"))
-                        .catchError((error) => print("Failed to delete : $error"));
+              //Header
+              PageTitle(
+                title: "Taches",
+                subtitle: _subtitle,
+                options:  Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(Icons.filter_list),
+                      onPressed: ()=>showDialog(
+                          context: context,
+                          builder: (BuildContext context){
+                            return MyDialogue(
+                              title: "Filtrer les taches",
+                              action:FlatButton(
+                                  child: Text("Filtrer"),
+                                  onPressed: (){
+                                    setState(() {
+                                      filter = tempFilter;
+                                    });
+                                    Navigator.pop(context, true);
+                                  }
+                              ),
+                              content: DropdownButtonFormField(
+                                icon: Icon(Icons.arrow_drop_down_circle),
+                                iconSize: 22.0,
+                                iconEnabledColor: Theme.of(context).primaryColor,
+                                items: filters.map((value){
+                                  return DropdownMenuItem(
+                                      value: value,
+                                      child: Text(
+                                          value,
+                                          style: TextStyle(
+                                              color: Colors.black87,
+                                              fontSize: 18.0
+                                          )
+                                      )
+                                  );
+                                }).toList(),
+                                style:TextStyle(fontSize: 18.0),
+                                decoration: InputDecoration(
+                                    labelText: 'Filtre',
+                                    labelStyle: TextStyle(fontSize: 18.0),
+                                    border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(10.0)
+                                    )
+                                ),
+                                validator: (input)=>((input==null)||(input.trim().isEmpty))?'Please enter a task':null,
+                                onSaved: (input)=>input,
+                                onChanged: (value){
+                                  setState(() {
+                                    tempFilter=value;
+                                  });
+                                },
+                              ),
+                            );
+                          }
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.calendar_today),
+                      onPressed: ()async{
+                        print("Pressed-1");
+                        if(!isDateFilterActive){
+                          print("Pressed-2");
+                          await showDatePicker(
+                            context: context,
+                            initialDate: DateTime.now(),
+                            firstDate: DateTime(2020),
+                            lastDate: DateTime(2050),
+                          ).then((picked){
+                            print("Pressed-3");
+                            if((picked != null) && (picked != selectedDate)){
+                              setState(() {
+                                dateFilter = picked;
+                              });
+                            }
+                          });
+                        }else{
+                          dateFilter = null;
+                        }
+                        print(isDateFilterActive);
+                        setState(() {
+                          isDateFilterActive = !isDateFilterActive;
+                        });
 
-                  },
-                  title: (data["description"] == null)?"[Empty]":data["description"],
-                  categorie: data["categorie"],
-                  subtitle: _dateFormat.format(
-                    DateTime.fromMillisecondsSinceEpoch(
-                      int.parse(
-                          (data["created_at"] is int)?(data["created_at"]*1000).toString():(data["created_at"].seconds*1000).toString()
-                      )
+                      },
+                    ),
+                    IconButton(
+                      icon: Icon(Icons.exit_to_app),
+                      onPressed: ()async{
+                        await auth.signOut();
+                        setState((){
+                          isConnected = false;
+                        });
+                      },
                     )
-                  ), user: data,
+                  ],
                 )
-              );
-            });
-            return ListView(
-                padding: EdgeInsets.symmetric(vertical: 50.0),
-                children: listWidgetTache
-            );
-          }
+              ),
+              //List content
+              StreamBuilder(
+                  stream: queryTaches.snapshots(),
+                  builder: (context, snapshots) {
+                    String subtitleTemp = "${(snapshots.hasData) ? snapshots.data.docs.length : 0.toString()} " +
+                        "Tache${(snapshots.hasData && (snapshots.data.docs.length > 1)) ? "s" : ""} " +
+                        "${filter == "Tous" ? "" : filter}" +
+                        "${(isDateFilterActive && (dateFilter != null))? " du ${_dateFormatFilter.format(dateFilter)}": ""}";
+                    // _subtitle = subtitleTemp;
+                    // print(snapshots.data.docs);
+                    return (
+                        (!snapshots.hasData)||
+                            (snapshots.data.docs.length == 0)
+                    )?
+                    Text("Liste vide", style: TextStyle(
+                      fontSize: 50.0
+                    ),):
+                    Container(
+                      height: MediaQuery.of(context).size.height-210,
+                      child:
+                        ListView.builder(
+                            padding: EdgeInsets.symmetric(vertical: 5.0),
+                            itemCount: snapshots.data.docs.length,
+                            itemBuilder: (context, index) {
+                              var data = snapshots.data.docs[index];
+                              return MyListTile(
+                                key: Key(data.id),
+                                user: data,
+                                onDismissed: (DismissDirection direction) {
+                                  tacheService.delete(data.id).then((value) {
+                                    print("supprimer");
+                                  }).catchError((e) {
+                                    print("Error" + e.toString());
+                                  });
+                                },
+                                title: (data["description"] == null)
+                                    ? "[Empty]"
+                                    : data["description"],
+                                categorie: data["categorie"],
+                                subtitle: _dateFormat.format(
+                                    DateTime.fromMillisecondsSinceEpoch(
+                                        int.parse(
+                                            (data["created_at"] is int)
+                                                ? (data["created_at"] * 1000).toString()
+                                                : (data["created_at"].seconds *1000).toString()
+                                        )
+                                    )
+                                ),
+                              );
+                            }
+                        )
+                    );
+                  }
+              )
+            ]
+        ),
 
-      ),
       floatingActionButton: FloatingActionButton(
         onPressed: (){
           Navigator.pushNamed(context, '/addTask');

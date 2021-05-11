@@ -25,6 +25,7 @@ class _MyTextFormFieldState extends State<MyTextFormField> {
         style:TextStyle(fontSize: 18.0),
         controller: widget.controller,
         maxLines: null,
+          minLines: 4,
           onSaved: widget.onSaved,
           decoration: InputDecoration(
             labelText: widget.labelText,

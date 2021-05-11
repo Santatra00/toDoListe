@@ -69,30 +69,38 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
         body: GestureDetector(
           onTap: ()=>FocusScope.of(context).unfocus(),
           child: SingleChildScrollView(
             child: Container(
-                padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 40.0),
+                padding: EdgeInsets.symmetric(horizontal: 40.0, vertical: 50.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: <Widget>[
-
-                    Text(
-                        "Login",
-                        style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 40.0,
-                            fontWeight: FontWeight.bold
-                        )
+                    Center(
+                      child: Container(
+                        child: Image.asset("assets/images/login.png", scale: 1.1,),
+                      )
                     ),
+
+                   SizedBox(height: 30.0,),
+                   Text(
+                          "Login",
+                          style: TextStyle(
+                              color: Colors.black,
+                              fontSize: 40.0,
+                              fontWeight: FontWeight.bold
+                          )
+                      ),
+
 
                     Form(
                         key: _formController,
                         child: Column(
                           children: [
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20.0),
+                              padding: EdgeInsets.symmetric(vertical: 10.0),
                               child: TextFormField(
                                 style:TextStyle(fontSize: 18.0),
                                 controller: _emailController,
@@ -109,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                             Padding(
-                              padding: EdgeInsets.symmetric(vertical: 20.0),
+                              padding: EdgeInsets.symmetric(vertical: 10.0),
                               child: TextFormField(
                                 obscureText: true,
                                 style:TextStyle(fontSize: 18.0),
@@ -129,8 +137,9 @@ class _LoginPageState extends State<LoginPage> {
                           ],
                         )
                     ),
+                    SizedBox(height: 20.0,),
                     Container(
-                      margin: EdgeInsets.symmetric(vertical: 20.0),
+                      margin: EdgeInsets.symmetric(vertical: 10.0),
                       height: 60.0,
                       width: double.infinity,
                       decoration: BoxDecoration(
@@ -148,14 +157,12 @@ class _LoginPageState extends State<LoginPage> {
                         ),
                       ),
                     ),
-                    SizedBox(height: 15.0,),
                     Center(
                       child: Text("ou"),
                     ),
-                    SizedBox(height: 15.0,),
 
                     Container(
-                      margin: EdgeInsets.symmetric(vertical: 20.0),
+                      margin: EdgeInsets.symmetric(vertical: 10.0),
                       height: 60.0,
                       width: double.infinity,
                       decoration: BoxDecoration(

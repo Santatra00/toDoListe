@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:taches/configuration.dart';
 import 'package:taches/screens/AddTask.dart';
+import 'package:taches/screens/DetailTask.dart';
 import 'package:taches/screens/Home.dart';
 import 'package:taches/screens/Login.dart';
 import 'package:taches/screens/SignIn.dart';
@@ -21,7 +22,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Ecrivez votre tache',
+      title: 'Liste de tache',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -33,6 +34,7 @@ class App extends StatelessWidget {
         '/inscription': (context)=>SignInPage(),
         '/home': (context) => MyHomePage(),
         '/addTask': (context) => AddTaskPage(),
+        '/detailTask': (context) => DetailTaskPage(),
       },
     );
   }

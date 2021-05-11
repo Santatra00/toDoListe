@@ -45,6 +45,7 @@ class _MyListTileState extends State<MyListTile> {
     return Dismissible(
       key: widget.key,
       background: Container(
+        height: 10.0,
         color: Theme.of(context).primaryColor,
       ),
         onDismissed: widget.onDismissed,
